@@ -4,3 +4,5 @@ hopsworks
 confluent-kafka
 pyarrow
 python-dotenv
+scikit-learn
+joblib
