@@ -6,3 +6,7 @@ pyarrow
 python-dotenv
 scikit-learn
 joblib
+streamlit
+shap
+matplotlib
+plotly
