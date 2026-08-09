@@ -2,25 +2,95 @@ name: Daily Training Pipeline
 
 on:
   schedule:
-    - cron: "0 3 * * *"   # runs once daily at 3:00 AM UTC
-  workflow_dispatch:
+    - cron: "0 3 * * *"   # daily at 03:00 UTC
+  workflow_dispatch: {}    # allows manual "Run workflow" button too
 
 jobs:
-  run-training-pipeline:
+  train-sklearn-and-export:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install hopsworks/sklearn requirements
         run: pip install -r requirements.txt
 
-      - name: Run training pipeline
+      - name: Train Ridge/RandomForest models and register them
         env:
           HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
         run: python training_pipeline/train_model.py
+
+      - name: Export training data for TensorFlow step
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+        run: python training_pipeline/export_training_data.py
+
+      - name: Upload training CSV as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tf-training-data
+          path: training_pipeline/tf_training_data.csv
+
+  train-tensorflow:
+    needs: train-sklearn-and-export
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install TensorFlow requirements (isolated from hopsworks)
+        run: pip install -r requirements-tf.txt
+
+      - name: Download training CSV
+        uses: actions/download-artifact@v4
+        with:
+          name: tf-training-data
+          path: training_pipeline/
+
+      - name: Train TensorFlow models
+        run: python training_pipeline/train_tf_model.py
+
+      - name: Upload trained TF models as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tf-models
+          path: training_pipeline/tf_models/
+
+  register-tensorflow:
+    needs: train-tensorflow
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install hopsworks requirements
+        run: pip install -r requirements.txt
+
+      - name: Download training CSV
+        uses: actions/download-artifact@v4
+        with:
+          name: tf-training-data
+          path: training_pipeline/
+
+      - name: Download trained TF models
+        uses: actions/download-artifact@v4
+        with:
+          name: tf-models
+          path: training_pipeline/tf_models/
+
+      - name: Register TF models to Hopsworks Model Registry
+        env:
+          HOPSWORKS_API_KEY: ${{ secrets.HOPSWORKS_API_KEY }}
+        run: python training_pipeline/register_tf_model.py

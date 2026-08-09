@@ -1,5 +1,17 @@
+# secrets
 .env
+**/hopsworks_certs/
+
+# virtual environments
 venv/
+venv-tf/
+
+# python cache
 __pycache__/
 *.pyc
-hopsworks_certs/
+
+# regenerable intermediate data (not needed in git, no secrets, just bulky)
+training_pipeline/tf_training_data.csv
+
+# OS junk
+.DS_Store
