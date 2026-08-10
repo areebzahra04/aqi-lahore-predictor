@@ -7,6 +7,7 @@ Designed to run daily via GitHub Actions.
 """
 
 import os
+import json
 import joblib
 import numpy as np
 import pandas as pd
@@ -32,6 +33,8 @@ MODELS = {
     "Ridge": Ridge(alpha=1.0),
     "RandomForest": RandomForestRegressor(n_estimators=200, max_depth=10, random_state=42),
 }
+
+CLASSICAL_METRICS_PATH = "training_pipeline/classical_metrics.json"
 
 
 def load_features(fs):
@@ -90,6 +93,20 @@ def select_best_per_horizon(results_df, trained):
     return best
 
 
+def save_classical_metrics(best_models):
+    # Written so the dashboard can always show an up-to-date classical
+    # vs TensorFlow comparison table without hardcoding numbers that
+    # go stale after every retrain.
+    out = {
+        horizon: {"model": model_name, **metrics}
+        for horizon, (model_name, _, metrics) in best_models.items()
+    }
+    os.makedirs(os.path.dirname(CLASSICAL_METRICS_PATH), exist_ok=True)
+    with open(CLASSICAL_METRICS_PATH, "w") as f:
+        json.dump(out, f, indent=2)
+    print(f"Saved classical model metrics -> {CLASSICAL_METRICS_PATH}")
+
+
 def register_models(project, best_models, X_train_sample):
     mr = project.get_model_registry()
     os.makedirs("models", exist_ok=True)
@@ -125,6 +142,7 @@ def main():
     for horizon, (name, _, metrics) in best_models.items():
         print(f"Best for {horizon}: {name} -> {metrics}")
 
+    save_classical_metrics(best_models)
     register_models(project, best_models, X_train_sample)
 
 

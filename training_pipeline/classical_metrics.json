@@ -1,0 +1,20 @@
+{
+  "24h": {
+    "model": "Ridge",
+    "RMSE": 24.622,
+    "MAE": 19.539,
+    "R2": 0.315
+  },
+  "48h": {
+    "model": "RandomForest",
+    "RMSE": 26.453,
+    "MAE": 21.424,
+    "R2": 0.207
+  },
+  "72h": {
+    "model": "RandomForest",
+    "RMSE": 28.228,
+    "MAE": 23.063,
+    "R2": 0.093
+  }
+}
