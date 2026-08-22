@@ -257,13 +257,13 @@ def main():
         # Get or create feature group
         print("\n2. Getting/Creating feature group...")
         try:
-            fg = fs.get_feature_group(name="aqi_lahore_features", version=2)
+            fg = fs.get_feature_group(name="aqi_lahore_features", version=3)
             print(f"✅ Found existing feature group: {fg.name} v{fg.version}")
         except Exception as e:
             print(f"   Feature group not found, creating new one...")
             fg = fs.create_feature_group(
                 name="aqi_lahore_features",
-                version=2,
+                version=3,
                 primary_key=["timestamp"],
                 event_time="timestamp",
                 time_travel_format="HUDI",

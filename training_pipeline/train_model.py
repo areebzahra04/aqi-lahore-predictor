@@ -198,7 +198,7 @@ def load_features_safely(fs):
     try:
         print("Loading features from Hopsworks...")
         
-        fg = fs.get_feature_group(name="aqi_lahore_features", version=2)
+        fg = fs.get_feature_group(name="aqi_lahore_features", version=3)
         
         query = fg.select_all()
         df = query.read()
